@@ -36,7 +36,7 @@ use thread_safe_jsvalue::ThreadSafeJsValue;
 fn good() {
     let value = ThreadSafeJsValue::new(42);
     let value2 = value.clone();
-    let value 3 = if let Some(value) = value2.try_value() {
+    let value 3 = if let Ok(value) = value2.try_value() {
         let value = value * 2;
         value.into()
     } else {
