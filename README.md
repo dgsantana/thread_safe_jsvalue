@@ -7,7 +7,7 @@ This crate provides a thread safe wrapper around `JsValue` from `wasm-bindgen`. 
 It also works with other types that aren't `Send` or `Sync`.
 
 This crates was inspired by [`SendWrapper`](https://github.com/thk1/send_wrapper), but is a little more turned to work with `JsValue` based values,
-that are required to be `Send` and `Sync` in (`Leptos`)[https://leptos.dev] 0.7+ signals.
+that are required to be `Send` and `Sync` in [`Leptos`](https://leptos.dev) 0.7+ signals.
 
 If the base javascript Rust wrapper includes Clone, PartialEq, PartialOrd, Hash, Debug, Display this wrapper will also include them. For wasm32 targets the wrapper will avoid the thread check, 
 since it is not necessary, since there aren't any threads.
