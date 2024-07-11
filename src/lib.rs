@@ -33,17 +33,13 @@ where
     ///
     /// ```
     /// use wasm_bindgen::JsValue;
-    /// use web_sys::Storage;
-    /// use utils::ThreadSafeJsValue;
+    /// use thread_safe_js_value::ThreadSafeJsValue;
     ///
     /// let js_value = JsValue::from(42);
-    /// let storage = Storage::new().unwrap();
     ///
     /// let js_value_ts = ThreadSafeJsValue::new(js_value);
-    /// let storage_ts = ThreadSafeJsValue::new(storage);
     ///
     /// assert_eq!(js_value_ts.value(), &JsValue::from(42));
-    /// assert_eq!(storage_ts.value(), &Storage::new().unwrap());
     /// ```
     pub fn new(value: T) -> Self {
         Self {
@@ -336,5 +332,12 @@ mod tests {
             thread_safe_js_value.try_value().unwrap(),
             &JsValue::from(42)
         );
+    }
+
+    #[wasm_bindgen_test]
+    fn test_thread_into_thread_safe_js_value() {
+        let js_value = JsValue::from(42);
+        let thread_safe_js_value = js_value.into_thread_safe_js_value();
+        assert_eq!(thread_safe_js_value.value(), &JsValue::from(42));
     }
 }
