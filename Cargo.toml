@@ -1,0 +1,13 @@
+[package]
+edition = "2021"
+name    = "thread_safe_jsvalue"
+description = "A simple crate to make easy to use JsValue in a thread-safe way, when Send and Sync are not implemented."
+authors = ["Daniel Santana <danielgsantana@gmail.com>"]
+version = "0.1.0"
+
+[dependencies]
+paste        = "1.0"
+wasm-bindgen = "0.2"
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3"
