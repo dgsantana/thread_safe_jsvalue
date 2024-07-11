@@ -9,6 +9,7 @@ use std::{
     ops::Deref,
 };
 
+#[cfg(feature = "macro")]
 use paste::paste;
 use wasm_bindgen::{convert::IntoWasmAbi, JsValue};
 
@@ -23,23 +24,20 @@ pub struct ThreadSafeJsValue<T> {
     thread_id: std::thread::ThreadId,
 }
 
-impl<T> ThreadSafeJsValue<T>
-where
-    T: IntoWasmAbi,
-{
+impl<T> ThreadSafeJsValue<T> {
     /// Creates a new ThreadSafeJsValue.
     ///
     /// # Example
     ///
     /// ```
     /// use wasm_bindgen::JsValue;
-    /// use thread_safe_js_value::ThreadSafeJsValue;
+    /// use thread_safe_jsvalue::ThreadSafeJsValue;
     ///
-    /// let js_value = JsValue::from(42);
+    /// let value = 42;
     ///
-    /// let js_value_ts = ThreadSafeJsValue::new(js_value);
+    /// let value_ts = ThreadSafeJsValue::new(value);
     ///
-    /// assert_eq!(js_value_ts.value(), &JsValue::from(42));
+    /// assert_eq!(value_ts.value(), &42);
     /// ```
     pub fn new(value: T) -> Self {
         Self {
@@ -75,6 +73,9 @@ impl<T> ThreadSafeJsValue<T> {
     /// Panics if the ThreadSafeJsValue is not valid for the current thread.
     #[track_caller]
     fn check_thread(&self) {
+        // This is only needed for non-wasm32 targets.
+        // wasm32 targets are single threaded.
+        #[cfg(not(target_arch = "wasm32"))]
         if self.thread_id != std::thread::current().id() {
             invalid_thread();
         }
@@ -279,6 +280,7 @@ fn invalid_thread() -> ! {
 ///
 /// This also adds a type alias for the ThreadSafeJsValue with a suffix.
 /// e.g. JsValue -> JsValueTS
+#[cfg(feature = "macro")]
 #[macro_export]
 macro_rules! impl_thread_safe_js_value {
     ($type:ty) => {
@@ -299,16 +301,18 @@ macro_rules! impl_thread_safe_js_value {
     };
 }
 
+#[cfg(feature = "macro")]
 impl_thread_safe_js_value!(JsValue);
 
-#[cfg(all(test, target_arch = "wasm32"))]
+#[cfg(test)]
 mod tests {
-    #[cfg(test)]
     use super::*;
-    #[cfg(test)]
+    #[cfg(target_arch = "wasm32")]
     use wasm_bindgen::JsValue;
+    #[cfg(target_arch = "wasm32")]
     use wasm_bindgen_test::wasm_bindgen_test;
 
+    #[cfg(target_arch = "wasm32")]
     #[wasm_bindgen_test]
     fn test_thread_safe_js_value() {
         let js_value = JsValue::from(42);
@@ -316,6 +320,7 @@ mod tests {
         assert_eq!(thread_safe_js_value.value(), &JsValue::from(42));
     }
 
+    #[cfg(target_arch = "wasm32")]
     #[wasm_bindgen_test]
     fn test_thread_safe_js_value_clone() {
         let js_value = JsValue::from(42);
@@ -324,6 +329,7 @@ mod tests {
         assert_eq!(cloned_thread_safe_js_value.value(), &JsValue::from(42));
     }
 
+    #[cfg(target_arch = "wasm32")]
     #[wasm_bindgen_test]
     fn test_thread_safe_js_value_try_value() {
         let js_value = JsValue::from(42);
@@ -334,10 +340,40 @@ mod tests {
         );
     }
 
+    #[cfg(target_arch = "wasm32")]
     #[wasm_bindgen_test]
     fn test_thread_into_thread_safe_js_value() {
         let js_value = JsValue::from(42);
         let thread_safe_js_value = js_value.into_thread_safe_js_value();
         assert_eq!(thread_safe_js_value.value(), &JsValue::from(42));
+    }
+
+    #[test]
+    fn test_thread_safe_value() {
+        let value = 42;
+        let thread_safe_value = ThreadSafeJsValue::new(value);
+        assert_eq!(thread_safe_value.value(), &42);
+    }
+
+    #[test]
+    fn test_thread_safe_value_clone() {
+        let value = 42;
+        let thread_safe_value = ThreadSafeJsValue::new(value);
+        let cloned_thread_safe_value = thread_safe_value.clone();
+        assert_eq!(cloned_thread_safe_value.value(), &42);
+    }
+
+    #[test]
+    fn test_thread_safe_value_try_value() {
+        let value = 42;
+        let thread_safe_value = ThreadSafeJsValue::new(value);
+        assert_eq!(thread_safe_value.try_value().unwrap(), &42);
+    }
+
+    #[test]
+    fn test_into_thread_safe_value() {
+        let value = 42;
+        let thread_safe_value = value.into_thread_safe_js_value();
+        assert_eq!(thread_safe_value.value(), &42);
     }
 }
