@@ -6,6 +6,12 @@ This crate provides a thread safe wrapper around `JsValue` from `wasm-bindgen`. 
 
 It also works with other types that aren't `Send` or `Sync`.
 
+This crates was inspired by [`SendWrapper`](https://github.com/thk1/send_wrapper), but is a little more turned to work with `JsValue` based values,
+that are required to be `Send` and `Sync` in (`Leptos`)[https://leptos.dev] 0.7+ signals.
+
+If the base javascript Rust wrapper includes Clone, PartialEq, PartialOrd, Hash, Debug, Display this wrapper will also include them. For wasm32 targets the wrapper will avoid the thread check, 
+since it is not necessary, since there aren't any threads.
+
 ## Features
 
 - macro to help create `From` implementations for your types
@@ -18,35 +24,40 @@ Add the following line to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-thread_safe_js_value = "0.1.0"
+thread_safe_jsvalue = "0.1.0"
 ```
 
 ## Usage
 
 ```rust
-use thread_safe_js_value::ThreadSafeJsValue;
+use thread_safe_jsvalue::ThreadSafeJsValue;
 
-// Example usage
-let value = ThreadSafeJsValue::from(42);
-let value2 = value.clone();
-let value 3 = if let Some(value) = value2.try_into_inner() {
-    let value = value * 2;
-    value.into()
-} else {
-    ThreadSafeJsValue::from(0)
+/// Example usage
+fn good() {
+    let value = ThreadSafeJsValue::from(42);
+    let value2 = value.clone();
+    let value 3 = if let Some(value) = value2.try_into_inner() {
+        let value = value * 2;
+        value.into()
+    } else {
+        ThreadSafeJsValue::from(0)
+    }
 }
 
-// Bad Example usage
-let value = ThreadSafeJsValue::from(42);
-let value2 = value.clone();
-let value3 = value.clone();
 
-let thread = std::thread::spawn(move || {
-    let value = value2;
-    let value = value.into_inner();
-    let value = value * 2;
-    value.into()
-});
+/// Bad Example usage
+fn bad() {
+    let value = ThreadSafeJsValue::from(42);
+    let value2 = value.clone();
+    let value3 = value.clone();
+
+    let thread = std::thread::spawn(move || {
+        let value = value2;
+        let value = value.into_inner();
+        let value = value * 2;
+        value.into()
+    });
+}
 
 ```
 
