@@ -34,20 +34,20 @@ use thread_safe_jsvalue::ThreadSafeJsValue;
 
 /// Example usage
 fn good() {
-    let value = ThreadSafeJsValue::from(42);
+    let value = ThreadSafeJsValue::new(42);
     let value2 = value.clone();
     let value 3 = if let Some(value) = value2.try_value() {
         let value = value * 2;
         value.into()
     } else {
-        ThreadSafeJsValue::from(0)
-    }
+        ThreadSafeJsValue::new(0)
+    };
 }
 
 
 /// Bad Example usage
 fn bad() {
-    let value = ThreadSafeJsValue::from(42);
+    let value = ThreadSafeJsValue::new(42);
     let value2 = value.clone();
     let value3 = value.clone();
 
